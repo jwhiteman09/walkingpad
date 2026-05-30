@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="WalkPad"/>
+<title>WalkPad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #0F6E56;
+    --red: #E24B4A;
+    --red-light: #FCEBEB;
+    --amber-light: #FAEEDA;
+    --amber-dark: #633806;
+    --bg: #F6F5F1;
+    --surface: #FFFFFF;
+    --surface2: #EFEDE8;
+    --border: rgba(0,0,0,0.10);
+    --border-med: rgba(0,0,0,0.18);
+    --text: #1A1916;
+    --text-2: #6B6860;
+    --text-3: #A8A69F;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1E1D1A;
+      --surface2: #272521;
+      --border: rgba(255,255,255,0.09);
+      --border-med: rgba(255,255,255,0.16);
+      --text: #F0EDE6;
+      --text-2: #9E9B94;
+      --text-3: #5A5850;
+      --green-light: #0A3326;
+      --green-dark: #5DCAA5;
+      --red-light: #2E1010;
+      --amber-light: #2A1E08;
+      --amber-dark: #EF9F27;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 8px;
+  }
+  .header-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .header-date {
+    font-size: 13px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 10px;
+  }
+
+  /* Timer */
+  .timer-card { text-align: center; padding: 24px 20px 20px; }
+  .timer-display {
+    font-family: var(--mono);
+    font-size: 58px;
+    font-weight: 400;
+    letter-spacing: -2px;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-status {
+    font-size: 12px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    height: 18px;
+    margin-bottom: 20px;
+  }
+  .timer-status .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    vertical-align: middle;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Buttons */
+  .btn-go {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  .btn-go:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-start { background: var(--green); color: #fff; }
+  .btn-stop  { background: var(--red);   color: #fff; }
+
+  .btn {
+    background: transparent;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn:active { transform: scale(0.97); }
+  .btn-danger { color: var(--red); border-color: var(--red); }
+  .btn-danger:hover { background: var(--red-light); }
+  .btn-success { color: var(--green-dark); border-color: var(--green); background: var(--green-light); }
+
+  /* Stats grid */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .stat-lbl {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Sliders */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface2);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--green);
+    cursor: pointer;
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--green);
+  }
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 52px;
+    text-align: right;
+    color: var(--text);
+  }
+  .hint { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+
+  /* Sessions list */
+  .session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .session-item:last-child { border-bottom: none; }
+  .session-main { font-size: 14px; font-weight: 500; color: var(--text); }
+  .session-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .cal-pill {
+    display: inline-block;
+    background: var(--amber-light);
+    color: var(--amber-dark);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    margin-left: 6px;
+    font-family: var(--mono);
+  }
+  .empty {
+    text-align: center;
+    color: var(--text-3);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+
+  /* Action bar */
+  .action-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  /* Past session form */
+  .collapsible { display: none; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .collapsible.open { display: flex; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .field input {
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: var(--sans);
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text);
+    width: 100%;
+  }
+  .field input:focus { outline: none; border-color: var(--green); }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  /* Import zone */
+  .import-zone {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 16px;
+    border: 0.5px dashed var(--border-med);
+    border-radius: var(--radius-sm);
+  }
+  .import-zone.open { display: flex; }
+  .import-hint { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+  .import-result {
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    display: none;
+    font-family: var(--mono);
+  }
+  .import-ok  { background: var(--green-light); color: var(--green-dark); }
+  .import-err { background: var(--red-light); color: var(--red); }
+
+  /* Log output */
+  .log-out {
+    display: none;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  /* History view */
+  #view-history { display: none; }
+  .view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+  }
+  .view-title { font-size: 18px; font-weight: 500; color: var(--text); }
+
+  .tab-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab {
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 400;
+    border: 0.5px solid var(--border-med);
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .day-header-row {
+    padding: 12px 0 6px;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 2px;
+  }
+  .day-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .day-totals { font-size: 11px; color: var(--text-3); margin-top: 2px; font-family: var(--mono); }
+
+  /* Edit form inline */
+  .edit-form {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin: 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .edit-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+
+  /* Divider */
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TRACKER VIEW -->
+<div id="view-tracker">
+  <div class="header">
+    <span class="header-title">WalkPad</span>
+    <span class="header-date" id="headerDate"></span>
+  </div>
+
+  <!-- Timer -->
+  <div class="card timer-card">
+    <div class="timer-display" id="display">0:00:00</div>
+    <div class="timer-status" id="timerStatus">idle</div>
+    <button class="btn-go btn-start" id="mainBtn" onclick="toggleTimer()">Start walking</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="todaySteps">0</div><div class="stat-lbl">steps today</div></div>
+    <div class="stat"><div class="stat-val" id="todayMins">0 min</div><div class="stat-lbl">time today</div></div>
+    <div class="stat"><div class="stat-val" id="todayCals">0</div><div class="stat-lbl">calories burned</div></div>
+    <div class="stat"><div class="stat-val" id="todaySessions">0</div><div class="stat-lbl">sessions</div></div>
+  </div>
+
+  <!-- Settings -->
+  <div class="card">
+    <div class="card-label">Steps per minute</div>
+    <div class="slider-row">
+      <input type="range" min="60" max="120" step="1" id="rateSlider" oninput="updateRate(this.value)"/>
+      <span class="slider-val"><span id="rateVal">85</span> spm</span>
+    </div>
+    <div class="hint">Typical desk pace: 70–100 spm</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Walking speed (for calories)</div>
+    <div class="slider-row">
+      <input type="range" min="1.5" max="4" step="0.1" id="speedSlider" oninput="updateSpeed(this.value)"/>
+      <span class="slider-val"><span id="speedVal">2.5</span> mph</span>
+    </div>
+    <div class="hint">Desk pace is usually 1.5–3 mph · 170 lb, 5'10", athletic</div>
+  </div>
+
+  <!-- Today's sessions -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-label" style="margin:0">Today's sessions</div>
+      <button class="btn" onclick="togglePastForm()">+ Add past</button>
+    </div>
+
+    <div class="collapsible" id="pastForm">
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Date</div>
+          <input type="date" id="pastDate"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Hours</div>
+          <input type="number" id="pastHours" placeholder="0" min="0" max="23"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Minutes</div>
+          <input type="number" id="pastMins" placeholder="45" min="0" max="59"/>
+        </div>
+      </div>
+      <button class="btn btn-success" onclick="addPastSession()" style="align-self:flex-start">Save session</button>
+    </div>
+
+    <div id="sessionList"><div class="empty">No sessions yet — hit start!</div></div>
+  </div>
+
+  <!-- Export / backup -->
+  <div class="card">
+    <div class="card-label">Backup &amp; export</div>
+    <div class="action-bar">
+      <button class="btn" onclick="copyLog()">Copy today's log</button>
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+      <button class="btn" onclick="toggleImport()">Import CSV</button>
+      <button class="btn" onclick="showView('history')">History →</button>
+    </div>
+
+    <div class="import-zone" id="importZone">
+      <div class="import-hint">Select a previously exported <code>walkingpad.csv</code> to restore sessions. Existing data is kept — duplicates are skipped.</div>
+      <input type="file" id="importFile" accept=".csv"/>
+      <button class="btn btn-success" onclick="runImport()" style="align-self:flex-start">Import file</button>
+      <div class="import-result" id="importResult"></div>
+    </div>
+
+    <div class="log-out" id="logEntry"></div>
+  </div>
+</div><!-- /view-tracker -->
+
+<!-- HISTORY VIEW -->
+<div id="view-history">
+  <div class="view-header">
+    <div class="view-title">History</div>
+    <button class="btn" onclick="showView('tracker')">← Back</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" id="tab-sessions" onclick="switchTab('sessions')">Sessions</button>
+    <button class="tab" id="tab-daily" onclick="switchTab('daily')">Daily summary</button>
+  </div>
+  <div class="card" style="padding: 0 20px;">
+    <div id="historyList"><div class="empty">No history yet.</div></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+let running=false,startTs=null,elapsed=0,ticker=null;
+let spm=85,speedMph=2.5,histTab='sessions',editingId=null;
+const WT_KG=170*0.453592;
+const KEY_S='wp_sessions_v2',KEY_R='wp_spm',KEY_SP='wp_speed';
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY_S)||'[]')}catch(e){return[]}}
+function save(s){localStorage.setItem(KEY_S,JSON.stringify(s))}
+function sid(s){return s.id||s.ts}
+
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function metFromSpeed(mph){if(mph<=2.0)return 2.5;if(mph<=2.5)return 2.8;if(mph<=3.0)return 3.5;if(mph<=3.5)return 4.3;return 5.0;}
+function calsFromSecs(secs,mph){return Math.round(metFromSpeed(mph)*WT_KG*(secs/3600));}
+function stepsFromSecs(s){return Math.round((s/60)*spm)}
+function fmt(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=Math.floor(s%60);return h+':'+String(m).padStart(2,'0')+':'+String(sc).padStart(2,'0');}
+function fmtMins(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h '+m+'m':m+' min';}
+function fmtDur(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=Math.floor(s%60);if(h>0)return h+'h '+String(m).padStart(2,'0')+'m';return m+'m '+String(sc).padStart(2,'0')+'s';}
+
+function init(){
+  spm=parseInt(localStorage.getItem(KEY_R))||85;
+  speedMph=parseFloat(localStorage.getItem(KEY_SP))||2.5;
+  document.getElementById('rateSlider').value=spm;
+  document.getElementById('rateVal').textContent=spm;
+  document.getElementById('speedSlider').value=speedMph;
+  document.getElementById('speedVal').textContent=speedMph.toFixed(1);
+  const now=new Date();
+  document.getElementById('headerDate').textContent=now.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+  renderToday();
+}
+
+function updateRate(v){spm=parseInt(v);document.getElementById('rateVal').textContent=spm;localStorage.setItem(KEY_R,spm);renderToday();}
+function updateSpeed(v){speedMph=parseFloat(parseFloat(v).toFixed(1));document.getElementById('speedVal').textContent=speedMph.toFixed(1);localStorage.setItem(KEY_SP,speedMph);renderToday();}
+
+function toggleTimer(){
+  if(!running){
+    running=true;startTs=Date.now()-elapsed*1000;ticker=setInterval(tick,500);
+    document.getElementById('mainBtn').textContent='Stop walking';
+    document.getElementById('mainBtn').className='btn-go btn-stop';
+    document.getElementById('timerStatus').innerHTML='<span class="dot"></span>Active';
+  } else {
+    clearInterval(ticker);running=false;
+    const totalSecs=Math.round((Date.now()-startTs)/1000);
+    const all=load();
+    all.push({date:todayStr(),secs:totalSecs,ts:startTs,speed:speedMph,id:Date.now()});
+    save(all);elapsed=0;
+    document.getElementById('display').textContent='0:00:00';
+    document.getElementById('mainBtn').textContent='Start walking';
+    document.getElementById('mainBtn').className='btn-go btn-start';
+    document.getElementById('timerStatus').textContent='idle';
+    renderToday();
+  }
+}
+
+function tick(){
+  elapsed=(Date.now()-startTs)/1000;
+  document.getElementById('display').textContent=fmt(elapsed);
+}
+
+function renderToday(){
+  const today=todayStr();
+  const sessions=load().filter(s=>s.date===today);
+  const totalSecs=sessions.reduce((a,b)=>a+b.secs,0);
+  document.getElementById('todaySteps').textContent=stepsFromSecs(totalSecs).toLocaleString();
+  document.getElementById('todayMins').textContent=fmtMins(totalSecs);
+  document.getElementById('todayCals').textContent=sessions.reduce((a,b)=>a+calsFromSecs(b.secs,b.speed||speedMph),0).toLocaleString();
+  document.getElementById('todaySessions').textContent=sessions.length;
+  const list=document.getElementById('sessionList');
+  if(!sessions.length){list.innerHTML='<div class="empty">No sessions yet — hit start!</div>';return;}
+  list.innerHTML=sessions.map((s,i)=>{
+    const start=new Date(s.ts);
+    const startStr=start.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const cals=calsFromSecs(s.secs,s.speed||speedMph);
+    return `<div class="session-item">
+      <span>
+        <div class="session-main">${startStr} · ${fmtDur(s.secs)}</div>
+        <div class="session-sub">${stepsFromSecs(s.secs).toLocaleString()} steps <span class="cal-pill">${cals} cal</span></div>
+      </span>
+      <button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteTodaySession(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteTodaySession(idx){
+  const today=todayStr();
+  const all=load();
+  const todays=all.filter(s=>s.date===today);
+  todays.splice(idx,1);
+  save([...all.filter(s=>s.date!==today),...todays]);
+  renderToday();
+}
+
+function togglePastForm(){
+  const f=document.getElementById('pastForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')) document.getElementById('pastDate').value=todayStr();
+}
+
+function addPastSession(){
+  const d=document.getElementById('pastDate').value;
+  const h=parseInt(document.getElementById('pastHours').value)||0;
+  const m=parseInt(document.getElementById('pastMins').value)||0;
+  if(!d||(h===0&&m===0))return;
+  const secs=h*3600+m*60;
+  const all=load();
+  all.push({date:d,secs,ts:new Date(d+'T12:00:00').getTime(),speed:speedMph,id:Date.now()});
+  save(all);
+  document.getElementById('pastHours').value='';
+  document.getElementById('pastMins').value='';
+  document.getElementById('pastForm').classList.remove('open');
+  renderToday();
+}
+
+function toggleImport(){
+  const z=document.getElementById('importZone');
+  z.classList.toggle('open');
+  document.getElementById('importResult').style.display='none';
+  document.getElementById('importFile').value='';
+}
+
+function runImport(){
+  const file=document.getElementById('importFile').files[0];
+  if(!file){showImportResult('No file selected.','err');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const lines=e.target.result.trim().split('\n');
+      if(lines.length<2){showImportResult('File appears empty.','err');return;}
+      const header=lines[0].split(',').map(h=>h.trim().toLowerCase());
+      const ci={date:header.indexOf('date'),start_time:header.indexOf('start_time'),duration_mins:header.indexOf('duration_mins'),speed_mph:header.indexOf('speed_mph')};
+      if(ci.date===-1||ci.duration_mins===-1){showImportResult('Missing required columns (date, duration_mins).','err');return;}
+      const existing=load();
+      const existingKeys=new Set(existing.map(s=>s.date+'_'+s.ts));
+      let added=0,skipped=0;
+      const imported=[];
+      for(let i=1;i<lines.length;i++){
+        const cols=lines[i].split(',');
+        if(cols.length<2)continue;
+        const date=(cols[ci.date]||'').trim();
+        const durMins=parseFloat((cols[ci.duration_mins]||'0').trim());
+        const startTime=ci.start_time>=0?(cols[ci.start_time]||'').trim():'12:00';
+        const speed=ci.speed_mph>=0?parseFloat((cols[ci.speed_mph]||'2.5').trim()):2.5;
+        if(!date||!durMins)continue;
+        const secs=Math.round(durMins*60);
+        const ts=new Date(date+'T'+(startTime||'12:00')+':00').getTime();
+        const key=date+'_'+ts;
+        if(existingKeys.has(key)){skipped++;continue;}
+        imported.push({date,secs,ts,speed:isNaN(speed)?2.5:speed,id:ts+Math.random()});
+        existingKeys.add(key);
+        added++;
+      }
+      save([...existing,...imported]);
+      renderToday();
+      showImportResult('Imported '+added+' session'+(added!==1?'s':'')+(skipped?', '+skipped+' duplicate'+(skipped!==1?'s':'')+' skipped':'')+'.' ,'ok');
+    }catch(err){showImportResult('Could not parse file: '+err.message,'err');}
+  };
+  reader.readAsText(file);
+}
+
+function showImportResult(msg,type){
+  const el=document.getElementById('importResult');
+  el.textContent=msg;
+  el.className='import-result '+(type==='ok'?'import-ok':'import-err');
+  el.style.display='block';
+}
+
+function showView(v){
+  document.getElementById('view-tracker').style.display=v==='tracker'?'block':'none';
+  document.getElementById('view-history').style.display=v==='history'?'block':'none';
+  if(v==='history'){editingId=null;renderHistory();}
+}
+
+function switchTab(t){
+  histTab=t;editingId=null;
+  document.getElementById('tab-sessions').className='tab'+(t==='sessions'?' active':'');
+  document.getElementById('tab-daily').className='tab'+(t==='daily'?' active':'');
+  renderHistory();
+}
+
+function deleteHistSession(sessionSid){
+  save(load().filter(s=>sid(s)!==sessionSid));
+  editingId=null;renderHistory();renderToday();
+}
+
+function startEdit(sessionSid){
+  editingId=(editingId===sessionSid)?null:sessionSid;
+  renderHistory();
+}
+
+function saveEdit(sessionSid){
+  const all=load();
+  const idx=all.findIndex(s=>sid(s)===sessionSid);
+  if(idx===-1)return;
+  const dateVal=document.getElementById('edit-date-'+sessionSid).value;
+  const timeVal=document.getElementById('edit-time-'+sessionSid).value;
+  const h=parseInt(document.getElementById('edit-h-'+sessionSid).value)||0;
+  const m=parseInt(document.getElementById('edit-m-'+sessionSid).value)||0;
+  if(!dateVal||(h===0&&m===0))return;
+  const secs=h*3600+m*60;
+  let newTs=all[idx].ts;
+  if(dateVal&&timeVal){newTs=new Date(dateVal+'T'+timeVal).getTime();}
+  else if(dateVal){newTs=new Date(dateVal+'T12:00:00').getTime();}
+  all[idx]={...all[idx],date:dateVal,secs,ts:newTs};
+  save(all);editingId=null;renderHistory();renderToday();
+}
+
+function editFormHtml(s){
+  const sessionSid=sid(s);
+  const start=new Date(s.ts);
+  const timeVal=start.toTimeString().slice(0,5);
+  const dh=Math.floor(s.secs/3600),dm=Math.floor((s.secs%3600)/60);
+  return `<div class="edit-form">
+    <div class="field-row">
+      <div class="field"><div class="field-label">Date</div><input type="date" id="edit-date-${sessionSid}" value="${s.date}"/></div>
+      <div class="field"><div class="field-label">Start time</div><input type="time" id="edit-time-${sessionSid}" value="${timeVal}"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Duration — hours</div><input type="number" id="edit-h-${sessionSid}" value="${dh}" min="0" max="23"/></div>
+      <div class="field"><div class="field-label">Duration — minutes</div><input type="number" id="edit-m-${sessionSid}" value="${dm}" min="0" max="59"/></div>
+    </div>
+    <div class="edit-actions">
+      <button class="btn" onclick="startEdit(${sessionSid})">Cancel</button>
+      <button class="btn btn-danger" onclick="deleteHistSession(${sessionSid})">Delete</button>
+      <button class="btn btn-success" onclick="saveEdit(${sessionSid})">Save</button>
+    </div>
+  </div>`;
+}
+
+function renderHistory(){
+  const all=load();
+  const el=document.getElementById('historyList');
+  if(!all.length){el.innerHTML='<div class="empty">No history yet.</div>';return;}
+  if(histTab==='sessions'){
+    const byDate={};
+    all.forEach(s=>{if(!byDate[s.date])byDate[s.date]=[];byDate[s.date].push(s);});
+    let html='';
+    Object.keys(byDate).sort().reverse().slice(0,60).forEach(date=>{
+      const sessions=byDate[date].sort((a,b)=>a.ts-b.ts);
+      const dayTotalSecs=sessions.reduce((a,b)=>a+b.secs,0);
+      const dayCals=sessions.reduce((a,b)=>a+calsFromSecs(b.secs,b.speed||speedMph),0);
+      const[y,mo,dy]=date.split('-').map(Number);
+      const dateLabel=new Date(y,mo-1,dy).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+      html+=`<div class="day-header-row">
+        <div class="day-name">${dateLabel}</div>
+        <div class="day-totals">${sessions.length} session${sessions.length!==1?'s':''} · ${fmtMins(dayTotalSecs)} · ${stepsFromSecs(dayTotalSecs).toLocaleString()} steps · ${dayCals} cal</div>
+      </div>`;
+      sessions.forEach(s=>{
+        const sessionSid=sid(s);
+        const start=new Date(s.ts);
+        const startStr=start.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+        if(editingId===sessionSid){
+          html+=editFormHtml(s);
+        } else {
+          html+=`<div class="session-item">
+            <span>
+              <div class="session-main">${startStr} · ${fmtDur(s.secs)}</div>
+              <div class="session-sub">${stepsFromSecs(s.secs).toLocaleString()} steps · ${calsFromSecs(s.secs,s.speed||speedMph)} cal</div>
+            </span>
+            <button class="btn" style="padding:4px 10px;font-size:12px" onclick="startEdit(${sessionSid})">Edit</button>
+          </div>`;
+        }
+      });
+    });
+    el.innerHTML=html;
+  } else {
+    const byDate={};
+    all.forEach(s=>{
+      if(!byDate[s.date])byDate[s.date]={secs:0,cals:0,count:0};
+      byDate[s.date].secs+=s.secs;
+      byDate[s.date].cals+=calsFromSecs(s.secs,s.speed||speedMph);
+      byDate[s.date].count++;
+    });
+    let html='';
+    Object.keys(byDate).sort().reverse().slice(0,60).forEach(date=>{
+      const v=byDate[date];
+      const[y,mo,dy]=date.split('-').map(Number);
+      const dateLabel=new Date(y,mo-1,dy).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+      html+=`<div class="session-item">
+        <span>
+          <div class="session-main">${dateLabel}</div>
+          <div class="session-sub">${v.count} session${v.count!==1?'s':''} · ${fmtMins(v.secs)}</div>
+        </span>
+        <span style="text-align:right">
+          <div style="font-size:14px;font-weight:500;font-family:var(--mono)">${stepsFromSecs(v.secs).toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">${v.cals} cal</div>
+        </span>
+      </div>`;
+    });
+    el.innerHTML=html;
+  }
+}
+
+function copyLog(){
+  const today=todayStr();
+  const sessions=load().filter(s=>s.date===today);
+  if(!sessions.length){showLog('No sessions logged today yet.');return;}
+  const totalSecs=sessions.reduce((a,b)=>a+b.secs,0);
+  const cals=sessions.reduce((a,b)=>a+calsFromSecs(b.secs,b.speed||speedMph),0);
+  const lines=sessions.map(s=>{
+    const startStr=new Date(s.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    return '  '+startStr+' · '+fmtDur(s.secs)+' · '+stepsFromSecs(s.secs).toLocaleString()+' steps · '+calsFromSecs(s.secs,s.speed||speedMph)+' cal';
+  });
+  const text='Walking pad — '+today+'\n'+lines.join('\n')+'\n\nTotal: '+fmtMins(totalSecs)+' · '+stepsFromSecs(totalSecs).toLocaleString()+' steps · '+cals+' cal';
+  navigator.clipboard.writeText(text).catch(()=>{});
+  showLog(text);
+}
+
+function exportCSV(){
+  const sessions=load();
+  if(!sessions.length){showLog('No data to export yet.');return;}
+  const rows=[['date','start_time','duration_mins','steps','calories','speed_mph']];
+  [...sessions].sort((a,b)=>a.ts-b.ts).forEach(s=>{
+    const timeStr=new Date(s.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+    rows.push([s.date,timeStr,Math.round(s.secs/60),stepsFromSecs(s.secs),calsFromSecs(s.secs,s.speed||speedMph),(s.speed||speedMph).toFixed(1)]);
+  });
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='walkingpad.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showLog(text){
+  const el=document.getElementById('logEntry');
+  el.textContent=text;el.style.display='block';
+}
+
+init();
+</script>
+</body>
+</html>
